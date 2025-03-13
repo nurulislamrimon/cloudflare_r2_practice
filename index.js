@@ -2,9 +2,10 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import { config } from "./config.js";
-import { uploadToR2 } from "./uploadService.js";
+import { getUploadUrl } from "./uploadService.js";
 
 const app = express();
+app.use(express.json());
 app.use(express.static("public"));
 
 const storage = multer.diskStorage({
@@ -18,9 +19,12 @@ const storage = multer.diskStorage({
 
 const uploads = multer({ storage: storage });
 
-app.post("/upload", uploads.single("file"), (req, res) => {
-  uploadToR2(req.file.path, req.file.filename);
-  res.send("File uploaded successfully");
+app.post("/upload-url", uploads.single("file"), async (req, res) => {
+  if (!req.body.fileName) {
+    return res.status(400).send("Please provide a file name");
+  }
+  const url = await getUploadUrl(req.body.fileName);
+  res.send({ message: "File uploaded successfully", url });
 });
 
 app.listen(config.PORT, () => {
