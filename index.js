@@ -1,9 +1,10 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import { config } from "./config.js";
+import { uploadToR2 } from "./uploadService.js";
 
 const app = express();
-const port = 5000;
 app.use(express.static("public"));
 
 const storage = multer.diskStorage({
@@ -18,9 +19,10 @@ const storage = multer.diskStorage({
 const uploads = multer({ storage: storage });
 
 app.post("/upload", uploads.single("file"), (req, res) => {
+  uploadToR2(req.file.path, req.file.filename);
   res.send("File uploaded successfully");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(config.PORT, () => {
+  console.log(`Server is running on port ${config.PORT}`);
 });
